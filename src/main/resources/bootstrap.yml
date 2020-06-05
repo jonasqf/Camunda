@@ -1,0 +1,7 @@
+spring: 
+  application:
+    name: template-camunda
+server:
+  port : 8081
+test:
+  config: dev

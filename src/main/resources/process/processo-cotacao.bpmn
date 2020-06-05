@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0u25vi5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.3.5">
+  <bpmn:collaboration id="processoCotacaoProcess">
+    <bpmn:participant id="processoCotacion" name="Processo cotacao" processRef="processoCotacao" />
+  </bpmn:collaboration>
+  <bpmn:process id="processoCotacao" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1tn3607">
+      <bpmn:lane id="Lane_1437ayz" name="Suprimentos">
+        <bpmn:flowNodeRef>taskEnviarSolicitacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ExclusiveGateway_0y24j83</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_15fosdi" name="Comercial">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_0bwd5r5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>tsk-buscarCotacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>BoundaryEvent_17yqtsw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_02417ii</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_1e57zzt" name="Fornecedor">
+        <bpmn:flowNodeRef>taskReceberSolicitacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_0thjae7</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:endEvent id="EndEvent_02417ii" name="Notificar&#10;cliente cotaçao &#10;reprovada">
+      <bpmn:incoming>SequenceFlow_0u4qsxw</bpmn:incoming>
+      <bpmn:messageEventDefinition />
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0y24j83" default="SequenceFlow_1h73w19">
+      <bpmn:incoming>SequenceFlow_1kfbcc8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0u4qsxw</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1h73w19</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="tsk-buscarCotacao" name="Buscar Cotações" camunda:delegateExpression="#{logger}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="Output_2nrbod7" />
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0aefsc4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_09y1f8x</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_17yqtsw" name="Cotação&#10;existente" cancelActivity="false" attachedToRef="tsk-buscarCotacao">
+      <bpmn:outgoing>SequenceFlow_17xmkzi</bpmn:outgoing>
+      <bpmn:conditionalEventDefinition>
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">${execution.hasVariable("temCotacao") &amp;&amp; temCotacao == false}</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="EndEvent_0bwd5r5">
+      <bpmn:incoming>SequenceFlow_17xmkzi</bpmn:incoming>
+      <bpmn:messageEventDefinition camunda:delegateExpression="#{logger}" />
+    </bpmn:endEvent>
+    <bpmn:userTask id="taskEnviarSolicitacao" name="Enviar solicitação de Cotação">
+      <bpmn:incoming>SequenceFlow_09y1f8x</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1kfbcc8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_0thjae7">
+      <bpmn:incoming>SequenceFlow_1pu98zc</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="taskReceberSolicitacao" name="Receber solicitação de Cotação">
+      <bpmn:incoming>SequenceFlow_1h73w19</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1pu98zc</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:startEvent id="StartEvent_1" name="Abertura de cotação">
+      <bpmn:outgoing>SequenceFlow_0aefsc4</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0u4qsxw" sourceRef="ExclusiveGateway_0y24j83" targetRef="EndEvent_02417ii">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decisao == "REPROVADO"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1h73w19" sourceRef="ExclusiveGateway_0y24j83" targetRef="taskReceberSolicitacao" />
+    <bpmn:sequenceFlow id="SequenceFlow_1kfbcc8" sourceRef="taskEnviarSolicitacao" targetRef="ExclusiveGateway_0y24j83" />
+    <bpmn:sequenceFlow id="SequenceFlow_0aefsc4" sourceRef="StartEvent_1" targetRef="tsk-buscarCotacao" />
+    <bpmn:sequenceFlow id="SequenceFlow_1pu98zc" sourceRef="taskReceberSolicitacao" targetRef="EndEvent_0thjae7" />
+    <bpmn:sequenceFlow id="SequenceFlow_17xmkzi" sourceRef="BoundaryEvent_17yqtsw" targetRef="EndEvent_0bwd5r5" />
+    <bpmn:sequenceFlow id="SequenceFlow_09y1f8x" sourceRef="tsk-buscarCotacao" targetRef="taskEnviarSolicitacao" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="processoCotacaoProcess">
+      <bpmndi:BPMNShape id="Participant_1jq4sar_di" bpmnElement="processoCotacion" isHorizontal="true">
+        <dc:Bounds x="129" y="80" width="896" height="520" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1hlumiz_di" bpmnElement="EndEvent_02417ii">
+        <dc:Bounds x="882" y="302" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="863" y="345" width="76" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0y24j83_di" bpmnElement="ExclusiveGateway_0y24j83" isMarkerVisible="true">
+        <dc:Bounds x="775" y="115" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0jbrk65_di" bpmnElement="tsk-buscarCotacao">
+        <dc:Bounds x="320" y="267" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_10fp9f8_di" bpmnElement="BoundaryEvent_17yqtsw">
+        <dc:Bounds x="402" y="329" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="448" y="337" width="44" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0d83cge_di" bpmnElement="EndEvent_0bwd5r5">
+        <dc:Bounds x="492" y="372" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0mxh4qz_di" bpmnElement="taskEnviarSolicitacao">
+        <dc:Bounds x="630" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0thjae7_di" bpmnElement="EndEvent_0thjae7">
+        <dc:Bounds x="932" y="522" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_00hbefv_di" bpmnElement="taskReceberSolicitacao">
+        <dc:Bounds x="750" y="500" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="212" y="289" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="202" y="332" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0u4qsxw_di" bpmnElement="SequenceFlow_0u4qsxw">
+        <di:waypoint x="825" y="140" />
+        <di:waypoint x="900" y="140" />
+        <di:waypoint x="900" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1h73w19_di" bpmnElement="SequenceFlow_1h73w19">
+        <di:waypoint x="800" y="165" />
+        <di:waypoint x="800" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kfbcc8_di" bpmnElement="SequenceFlow_1kfbcc8">
+        <di:waypoint x="730" y="140" />
+        <di:waypoint x="775" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0aefsc4_di" bpmnElement="SequenceFlow_0aefsc4">
+        <di:waypoint x="248" y="307" />
+        <di:waypoint x="320" y="307" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1pu98zc_di" bpmnElement="SequenceFlow_1pu98zc">
+        <di:waypoint x="850" y="540" />
+        <di:waypoint x="932" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_17xmkzi_di" bpmnElement="SequenceFlow_17xmkzi">
+        <di:waypoint x="420" y="365" />
+        <di:waypoint x="420" y="390" />
+        <di:waypoint x="492" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_09y1f8x_di" bpmnElement="SequenceFlow_09y1f8x">
+        <di:waypoint x="420" y="307" />
+        <di:waypoint x="530" y="307" />
+        <di:waypoint x="530" y="140" />
+        <di:waypoint x="630" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Lane_1437ayz_di" bpmnElement="Lane_1437ayz" isHorizontal="true">
+        <dc:Bounds x="159" y="80" width="866" height="173" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_15fosdi_di" bpmnElement="Lane_15fosdi" isHorizontal="true">
+        <dc:Bounds x="159" y="253" width="866" height="173" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1e57zzt_di" bpmnElement="Lane_1e57zzt" isHorizontal="true">
+        <dc:Bounds x="159" y="426" width="866" height="174" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

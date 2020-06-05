@@ -1,0 +1,97 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath group: 'com.bmuschko', name: 'gradle-clover-plugin', version: '2.2.0'
+        classpath group: 'org.sonarsource.scanner.gradle', name: 'sonarqube-gradle-plugin', version: '2.6.2'
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    jcenter()
+}
+
+
+    apply plugin: com.bmuschko.gradle.clover.CloverPlugin
+    apply plugin: org.sonarqube.gradle.SonarQubePlugin
+
+    dependencies {
+        clover 'org.openclover:clover:4.2.0'
+    }
+
+  clover {
+
+      testIncludes = ['**/*Test.java']
+      //caso queira estipular uma percentagem mínima de cobertura, habilite a linha abaixo:
+      //targetPercentage = '10%'
+      //aloque aqui os pacotes que devem ser excluídos da métrica.
+      excludes = ['**/model/**', '**/token/**', '**/utils/**', '**/config/**', '**/entity/**', '**/dto/**']
+
+
+      compiler {
+          encoding = 'UTF-8'
+          debug = true
+          additionalArgs = '-parameters'
+      }
+
+      report {
+          html = true
+          pdf = true
+          filter = 'log,main' //
+
+          // Support capturing test results from JUnix XML report
+          //testResultsDir = project.tasks.getByName('test').reports.junitXml.destination
+          testResultsInclude = 'TEST-*.xml'
+          //testExcludes = 'model'
+
+          // Clover report nested columns support
+          columns {
+              coveredMethods format: 'longbar', min: '75'
+              coveredStatements format: '%'
+              coveredBranches format: 'raw'
+              totalPercentageCovered format: '%', scope: 'package'
+          }
+
+          // Clover history generation support
+
+          historical {
+              enabled = true
+              historyIncludes = 'clover-*.xml.gz'
+              packageFilter = null
+              from = null
+              to = null
+
+              added {
+                  range = 10
+                  interval = '1 weeks'
+              }
+              mover {
+                  threshold = 1
+                  range = 10
+                  interval = '3 weeks'
+              }
+              mover {
+                  threshold = 1
+                  range = 10
+                  interval = '2 months'
+              }
+          }
+      }
+  }
+sonarqube {
+        properties {
+            property "sonar.host.url", "http://sonar.agiplan.aws.local/"
+            property "sonar.login", "c6d34535c568035c069e44a7341571a98bf0e09d" //coloque a key de sua própria conta no sonar.
+            property "sonar.clover.reportPath", "${project.buildDir}/reports/clover/clover.xml"
+            property "sonar.core.codeCoveragePlugin","clover"
+            property "sonar.tests", "src/test/java"
+            property "sonar.java.binaries", "${project.buildDir}/classes"
+            property "sonar.projectName", "bpm-camunda-pc-passiva"
+            property "sonar.coverage.exclusions", "**/dto/**, **/domain/**, **/ApimToken.java, **/ConfiguracaoApim.java"
+        }
+  }
+//build.finalizedBy cloverGenerateReport
